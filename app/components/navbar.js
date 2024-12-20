@@ -1,68 +1,113 @@
-export default function navbar() {
-    return (
-        // <div>navbar</div>
-        <div className="navbar fixed top-0 shadow-md backdrop-blur-sm shadow-gray-900 rounded-lg border-black border-x border-b z-50">
-        <div className="navbar-start">
-          <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-            </div>
-            <ul
-              tabIndex={0}
-              className="menu menu-lg dropdown-content backdrop-blur-sm shadow-gray-900 border-black border-x border-b rounded-box z-[1] mt-3 w-72 p-2 shadow-md">
-              <li><a className="p-2">Homepage</a></li>
-              <li><a className="p-2">Portfolio</a></li>
-              <li><a className="p-2">About</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="navbar-center">
-          <a className="btn btn-ghost text-xl">daisyUI</a>
-        </div>
-        <div className="navbar-end">
-          <button className="btn btn-ghost btn-circle">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          <button className="btn btn-ghost btn-circle">
-            <div className="indicator">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="badge badge-xs badge-primary indicator-item"></span>
-            </div>
-          </button>
-        </div>
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/authContext";
+
+export default function Navbar() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const navigate = (path) => {
+    router.push(path);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    // navigate("/signin"); // Redirect to the sign-in page after logout
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="navbar fixed top-0 shadow-md backdrop-blur-sm shadow-gray-900 rounded-lg border-black border-x border-b z-50">
+      <div className="flex-1">
+        <button
+          onClick={() => navigate("/")}
+          className="btn btn-ghost text-xl font-extrabold text-black hover:text-gray-700"
+        >
+          Paris Olympics 2024
+        </button>
       </div>
-    );  
-  }
+      <div className="flex-none">
+        <ul className="menu menu-horizontal px-1 space-x-6 text-lg">
+          {user ? (
+            <>
+              <li>
+                <button
+                  onClick={() => navigate("/schedule")}
+                  className="hover:text-gray-700 transition duration-200"
+                >
+                  Schedule
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate("/medalists")}
+                  className="hover:text-gray-700 transition duration-200"
+                >
+                  Medalists
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate("/highlights")}
+                  className="hover:text-gray-700 transition duration-200"
+                >
+                  Highlights
+                </button>
+              </li>
+              <li className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleDropdown}
+                  className="hover:text-gray-700 transition duration-200"
+                >
+                  {user?.name || "User"}
+                </button>
+                {dropdownOpen && (
+                  <ul className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md border border-gray-300">
+                    <li>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-black"
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </li>
+            </>
+          ) : (
+            <li>
+              <button
+                onClick={() => navigate("/signin")}
+                className="hover:text-gray-700 transition duration-200"
+              >
+                Sign In
+              </button>
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
